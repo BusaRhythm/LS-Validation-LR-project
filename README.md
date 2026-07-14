@@ -1,3 +1,24 @@
+## Screenshots
+
+### Inventory View
+
+<p align="center">
+  <img
+    src="image/1.png"
+    alt="LogRhythm Log Source Explorer Inventory View"
+    width="100%"
+  />
+</p>
+
+### Comparative Mode
+
+<p align="center">
+  <img
+    src="image/2.png"
+    alt="LogRhythm Log Source Explorer Comparative Mode"
+    width="100%"
+  />
+</p>
 # LogRhythm Log Source Explorer (Unofficial Utility)
 
 > This is an unofficial, independent community utility. It is not an official
