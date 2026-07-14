@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>LogRhythm Log Source Explorer (Unofficial Utility)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="brand-copy">
+        <p class="eyebrow brand-tagline">SIEM Therapists Utility (built by AI + Love) From Community to Community</p>
+        <h1>LogRhythm Log Source Explorer (Unofficial Utility)</h1>
+        <p class="brand-disclaimer">This is an independent community utility and is not an official LogRhythm product.</p>
+      </div>
+      <div id="connectionBadge" class="status-badge" data-state="idle">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="connectionText">Not connected</span>
+      </div>
+    </header>
+
+    <nav class="app-nav" aria-label="Application views">
+      <button type="button" class="nav-button active" data-view="inventory" aria-current="page">Inventory</button>
+      <button type="button" class="nav-button" data-view="comparison">Comparative Mode</button>
+    </nav>
+
+    <main>
+      <section class="connection-card" data-app-view="inventory" aria-labelledby="connectionHeading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Platform Manager</p>
+            <h2 id="connectionHeading">Connect to the Admin API</h2>
+          </div>
+          <p class="privacy-note">Token stays in this browser tab's memory only.</p>
+        </div>
+
+        <form id="connectionForm" novalidate>
+          <div class="form-grid">
+            <label class="field host-field">
+              <span>FQDN or IP address</span>
+              <span class="input-prefix">https://</span>
+              <input id="hostInput" name="host" type="text" inputmode="url"
+                     placeholder="platform-manager.example.com" autocomplete="off"
+                     autocapitalize="none" spellcheck="false" required>
+            </label>
+            <label class="field port-field">
+              <span>Port</span>
+              <input id="portInput" value="8501" readonly aria-readonly="true" tabindex="-1">
+            </label>
+            <label class="field token-field">
+              <span>Bearer Token</span>
+              <input id="tokenInput" name="token" type="password" placeholder="Enter token"
+                     autocomplete="off" required>
+            </label>
+            <div class="form-actions">
+              <button id="connectButton" class="button button-primary" type="submit">
+                <span class="button-icon" aria-hidden="true">↻</span>
+                Connect and Load
+              </button>
+              <button id="cancelButton" class="button button-danger" type="button" hidden>Cancel</button>
+            </div>
+          </div>
+        </form>
+
+        <div id="progressRegion" class="progress-region" hidden aria-live="polite">
+          <div class="progress-copy">
+            <span id="progressMessage">Preparing request…</span>
+            <span id="progressCount">0 discovered</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-label="Loading log sources"
+               aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="progressBar" class="progress-bar"></div>
+          </div>
+        </div>
+
+        <div id="messageBox" class="message-box" hidden role="alert"></div>
+      </section>
+
+      <section class="results-card" data-app-view="inventory" aria-labelledby="resultsHeading">
+        <div class="results-header">
+          <div>
+            <p class="eyebrow">Inventory</p>
+            <div class="title-row">
+              <h2 id="resultsHeading">Log Sources</h2>
+              <span id="totalBadge" class="count-badge">Operational 0</span>
+              <span id="failedBadge" class="count-badge count-badge-error" hidden>Failed Details 0</span>
+              <span id="unknownBadge" class="count-badge count-badge-muted" hidden>Unknown 0</span>
+              <span id="excludedBadge" class="count-badge count-badge-muted">Excluded 0</span>
+              <span id="discoveredBadge" class="count-badge">Total Discovered 0</span>
+            </div>
+          </div>
+          <div class="results-controls">
+            <label class="search-control">
+              <span class="sr-only">Search log sources</span>
+              <span aria-hidden="true">⌕</span>
+              <input id="searchInput" type="search" placeholder="Search log sources…" disabled>
+            </label>
+            <div class="filter-group" role="group" aria-label="Record status filter">
+              <button type="button" class="filter-button active" data-filter="all" aria-pressed="true">All <span id="allCount">0</span></button>
+              <button type="button" class="filter-button" data-filter="active" aria-pressed="false">Active <span id="activeCount">0</span></button>
+              <button type="button" class="filter-button" data-filter="retired" aria-pressed="false">Retired <span id="retiredCount">0</span></button>
+            </div>
+            <button id="advancedFiltersToggle" class="button button-secondary advanced-toggle" type="button" aria-expanded="false" aria-controls="advancedFiltersPanel">Advanced Filters</button>
+            <button id="inventoryExportButton" class="button button-secondary" type="button" disabled title="Exports all currently filtered operational records across every page, not only the current page.">Export Visible CSV (0)</button>
+          </div>
+        </div>
+
+        <section id="advancedFiltersPanel" class="advanced-filters" aria-labelledby="advancedFiltersHeading" hidden>
+          <div class="advanced-filters-heading">
+            <div>
+              <p class="eyebrow">Local inventory filters</p>
+              <h3 id="advancedFiltersHeading">Advanced Filters</h3>
+              <span id="activeFilterCount" class="active-filter-count">0 active</span>
+            </div>
+            <button id="clearFiltersButton" class="button button-secondary" type="button">Clear All Filters</button>
+          </div>
+          <div class="advanced-filter-grid">
+            <label class="field"><span>Name</span><input id="filterName" type="text" autocomplete="off"></label>
+            <label class="field"><span>Log Source ID</span><input id="filterId" type="text" autocomplete="off"></label>
+            <label class="field"><span>Entity</span><input id="filterEntity" type="text" autocomplete="off"></label>
+            <label class="field"><span>Log Source Type</span><input id="filterType" type="text" autocomplete="off"></label>
+            <label class="field"><span>Host</span><input id="filterHost" type="text" autocomplete="off"></label>
+            <label class="field"><span>System Monitor</span><input id="filterSystemMonitor" type="text" autocomplete="off"></label>
+            <label class="field"><span>Collection Method</span>
+              <select id="filterCollectionMethod">
+                <option value="all">All</option>
+                <option value="Push Syslog">Push Syslog</option>
+                <option value="Pull API">Pull API</option>
+                <option value="Pull the MS Event Log">Pull the MS Event Log</option>
+                <option value="Pull Flat File">Pull Flat File</option>
+                <option value="Pull UDLA">Pull UDLA</option>
+                <option value="Open Collector">Open Collector</option>
+                <option value="Unknown">Unknown</option>
+              </select>
+            </label>
+            <label class="field"><span>Identifier Type</span><input id="filterIdentifierType" type="text" autocomplete="off"></label>
+            <label class="field"><span>Identifier Value</span><input id="filterIdentifierValue" type="text" autocomplete="off"></label>
+            <label class="field"><span>Record Status</span>
+              <select id="filterStatus">
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="retired">Retired</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </label>
+            <label class="field"><span>Has Detail Error</span>
+              <select id="filterHasError">
+                <option value="all">All</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section id="detailImportSummary" class="detail-import-summary" hidden aria-live="polite">
+          <div class="detail-summary-counts">
+            <span id="detailSuccessCount">Successful details: 0</span>
+            <span id="detailFailureCount">Failed details: 0</span>
+          </div>
+          <div id="failureGroups" class="failure-groups"></div>
+          <button id="retryFailedButton" class="button button-secondary" type="button" hidden>Retry Failed Details</button>
+        </section>
+
+        <div id="emptyState" class="empty-state">
+          <div class="empty-icon" aria-hidden="true">⌁</div>
+          <h3>No log sources loaded</h3>
+          <p>Enter your Platform Manager details above to retrieve the log source inventory.</p>
+        </div>
+
+        <div id="tableRegion" class="table-region" hidden>
+          <table>
+            <thead>
+              <tr>
+                <th class="sticky-col id-col"><button type="button" class="sort-button" data-sort="id">ID <span>↕</span></button></th>
+                <th class="sticky-col name-col"><button type="button" class="sort-button" data-sort="name">Name <span>↕</span></button></th>
+                <th class="sticky-col status-col"><button type="button" class="sort-button" data-sort="status">Record Status <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="entity">Entity <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="type">Log Source Type <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="collectionMethod">Collection Method <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="host">Host <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="systemMonitor">System Monitor <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="lastLogDate">Last Log Date <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="identifier1">Identifier 1 <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="identifier2">Identifier 2 <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="identifier3">Identifier 3 <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="identifier4">Identifier 4 <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="identifier5">Identifier 5 <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="identifier6">Identifier 6 <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="identifier7">Identifier 7 <span>↕</span></button></th>
+                <th><button type="button" class="sort-button" data-sort="identifier8">Identifier 8 <span>↕</span></button></th>
+                <th><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="logSourceBody"></tbody>
+          </table>
+        </div>
+        <div id="operationalPagination" class="pagination-bar" hidden aria-label="Operational inventory pagination">
+          <label class="page-size-control">Rows per page
+            <select id="operationalPageSize">
+              <option value="50">50</option><option value="100" selected>100</option><option value="250">250</option>
+              <option value="500">500</option><option value="1000">1000</option><option value="all">All</option>
+            </select>
+          </label>
+          <span id="operationalRange" class="pagination-range">Showing 0 records</span>
+          <div class="pagination-buttons">
+            <button id="operationalFirst" class="button button-secondary" type="button">First</button>
+            <button id="operationalPrevious" class="button button-secondary" type="button">Previous</button>
+            <span id="operationalPageIndicator" class="page-indicator" aria-live="polite">Page 1 of 1</span>
+            <button id="operationalNext" class="button button-secondary" type="button">Next</button>
+            <button id="operationalLast" class="button button-secondary" type="button">Last</button>
+          </div>
+        </div>
+        <p id="resultSummary" class="result-summary" hidden aria-live="polite"></p>
+      </section>
+
+      <section class="results-card excluded-card" data-app-view="inventory" aria-labelledby="excludedHeading">
+        <div class="results-header">
+          <div>
+            <p class="eyebrow">Separated inventory</p>
+            <div class="title-row">
+              <h2 id="excludedHeading">Excluded / Internal Log Sources</h2>
+              <span id="excludedSectionCount" class="count-badge count-badge-muted">0</span>
+            </div>
+          </div>
+          <div class="results-controls">
+            <button id="excludedToggle" class="button button-secondary" type="button" aria-expanded="false" aria-controls="excludedContent">Show Excluded</button>
+            <button id="excludedExportButton" class="button button-secondary" type="button" disabled title="Exports all currently filtered excluded records across every page, not only the current page.">Export Excluded CSV (0)</button>
+          </div>
+        </div>
+        <div id="excludedContent" hidden>
+          <div id="excludedEmptyState" class="empty-state compact-empty">
+            <h3>No excluded sources</h3>
+            <p>No loaded Log Source Type matches the centralized exclusion list.</p>
+          </div>
+          <div id="excludedTableRegion" class="table-region" hidden>
+            <table>
+              <thead><tr>
+                <th class="sticky-col id-col">ID</th><th class="sticky-col name-col">Name</th><th class="sticky-col status-col">Record Status</th><th>Log Source Type</th><th>Exclusion Reason</th><th>Collection Method</th><th>Host</th><th>Last Log Date</th><th>Identifier 1</th><th>Identifier 2</th><th><span class="sr-only">Actions</span></th>
+              </tr></thead>
+              <tbody id="excludedLogSourceBody"></tbody>
+            </table>
+          </div>
+          <div id="excludedPagination" class="pagination-bar" hidden aria-label="Excluded inventory pagination">
+            <label class="page-size-control">Rows per page
+              <select id="excludedPageSize">
+                <option value="50">50</option><option value="100" selected>100</option><option value="250">250</option>
+                <option value="500">500</option><option value="1000">1000</option><option value="all">All</option>
+              </select>
+            </label>
+            <span id="excludedRange" class="pagination-range">Showing 0 records</span>
+            <div class="pagination-buttons">
+              <button id="excludedFirst" class="button button-secondary" type="button">First</button>
+              <button id="excludedPrevious" class="button button-secondary" type="button">Previous</button>
+              <span id="excludedPageIndicator" class="page-indicator" aria-live="polite">Page 1 of 1</span>
+              <button id="excludedNext" class="button button-secondary" type="button">Next</button>
+              <button id="excludedLast" class="button button-secondary" type="button">Last</button>
+            </div>
+          </div>
+          <p id="excludedResultSummary" class="result-summary" hidden></p>
+        </div>
+      </section>
+
+      <section id="comparisonView" class="comparison-view" data-app-view="comparison" hidden aria-labelledby="comparisonHeading">
+        <div class="comparison-header">
+          <p class="eyebrow">Comparative Mode</p>
+          <h2 id="comparisonHeading">Simple Comparison</h2>
+          <p id="comparisonInventoryNotice" class="comparison-notice">Load the LogRhythm inventory before starting a comparison.</p>
+        </div>
+
+        <div id="comparisonWorkspace" hidden>
+          <section class="comparison-card" aria-labelledby="uploadHeading">
+            <div class="section-heading">
+              <div><p class="eyebrow">Input</p><h3 id="uploadHeading">Upload assets</h3></div>
+              <label class="checkbox-control"><input id="includeExcludedComparison" type="checkbox"> Include Excluded/Internal Log Sources</label>
+            </div>
+            <p class="input-guidance">Upload a file containing one IP address or FQDN per row. Do not include URLs, ports, paths, usernames, or additional columns.</p>
+            <input id="comparisonFileInput" class="file-input" type="file" accept=".txt,.csv,.xlsx">
+            <div id="fileValidationMessage" class="message-box" hidden role="alert"></div>
+            <div id="fileSummary" class="metric-grid" hidden>
+              <span>Total submitted rows <strong id="submittedRowCount">0</strong></span>
+              <span>Valid rows <strong id="validRowCount">0</strong></span>
+              <span>Invalid rows <strong id="invalidRowCount">0</strong></span>
+              <span>Duplicate submitted rows <strong id="duplicateRowCount">0</strong></span>
+            </div>
+            <p id="noDuplicatesMessage" class="positive-message" hidden>No duplicate submitted assets were detected.</p>
+            <details id="duplicateRowsPanel" class="validation-panel duplicate-panel" hidden>
+              <summary>Duplicate Submitted Assets</summary>
+              <p class="duplicate-warning">Duplicate rows may inflate comparison results when included in duplicate-aware exports.</p>
+              <div class="table-region"><table><thead><tr><th>Original Submitted Value</th><th>Normalized Value</th><th>Original Row Number</th><th>First Occurrence Row Number</th><th>Number of Occurrences</th></tr></thead><tbody id="duplicateRowsBody"></tbody></table></div>
+            </details>
+            <div id="invalidRowsPanel" class="validation-panel" hidden>
+              <h4>Invalid rows</h4>
+              <div class="table-region"><table><thead><tr><th>Row</th><th>Submitted Value</th><th>Reason</th></tr></thead><tbody id="invalidRowsBody"></tbody></table></div>
+            </div>
+          </section>
+
+          <section class="comparison-card" aria-labelledby="comparisonResultsHeading">
+            <div class="results-header comparison-results-header">
+              <div><p class="eyebrow">Results</p><h3 id="comparisonResultsHeading">Comparison Results</h3></div>
+              <div class="results-controls">
+                <label class="search-control"><span class="sr-only">Search comparison results</span><span aria-hidden="true">⌕</span><input id="comparisonSearch" type="search" placeholder="Search results…" disabled></label>
+                <select id="comparisonMatchFilter" class="compact-select" disabled><option value="all">All Results</option><option value="matched">Matched</option><option value="unmatched">Unmatched</option></select>
+                <button id="clearComparisonButton" class="button button-secondary" type="button" disabled>Clear Results</button>
+                <button id="comparisonCsvButton" class="button button-secondary" type="button" disabled>Export Visible CSV (0)</button>
+                <button id="comparisonXlsxButton" class="button button-secondary" type="button" disabled>Export Visible Excel (0)</button>
+                <button id="comparisonDuplicatesCsvButton" class="button button-secondary" type="button" hidden disabled>Export Visible with Duplicates CSV (0)</button>
+                <button id="comparisonDuplicatesXlsxButton" class="button button-secondary" type="button" hidden disabled>Export Visible with Duplicates Excel (0)</button>
+              </div>
+            </div>
+            <div id="comparisonSummary" class="metric-grid" hidden>
+              <span>Total Submitted Rows <strong id="comparisonSubmittedCount">0</strong></span>
+              <span>Unique Valid Assets <strong id="comparisonUniqueValidCount">0</strong></span>
+              <span>Duplicate Submitted Rows <strong id="comparisonDuplicateCount">0</strong></span>
+              <span>Matched assets <strong id="comparisonMatchedCount">0</strong></span>
+              <span>Unmatched assets <strong id="comparisonUnmatchedCount">0</strong></span>
+              <span>Invalid rows <strong id="comparisonInvalidCount">0</strong></span>
+              <span>Total matching Log Source records <strong id="comparisonMatchRecordCount">0</strong></span>
+            </div>
+            <div id="comparisonEmptyState" class="empty-state compact-empty"><h3>No comparison results</h3><p>Upload a valid TXT, CSV, or XLSX file to compare assets.</p></div>
+            <div id="comparisonTableRegion" class="table-region" hidden>
+              <table class="comparison-table"><thead><tr>
+                <th><button type="button" class="comparison-sort" data-comparison-sort="submitted">Submitted Asset <span>↕</span></button></th>
+                <th><button type="button" class="comparison-sort" data-comparison-sort="type">Log Source Type <span>↕</span></button></th>
+                <th><button type="button" class="comparison-sort" data-comparison-sort="name">Log Source Name <span>↕</span></button></th>
+              </tr></thead><tbody id="comparisonBody"></tbody></table>
+            </div>
+            <p id="comparisonVisibleSummary" class="result-summary" hidden></p>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+  <aside id="detailsDrawer" class="details-drawer" aria-labelledby="drawerTitle" aria-hidden="true">
+    <div class="drawer-header">
+      <div>
+        <p class="eyebrow">Log source details</p>
+        <h2 id="drawerTitle">Details</h2>
+        <p id="drawerSubtitle"></p>
+      </div>
+      <button id="closeDrawerButton" class="icon-button" type="button" aria-label="Close details">×</button>
+    </div>
+    <div id="drawerContent" class="drawer-content"></div>
+  </aside>
+
+  <script src="xlsx.full.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

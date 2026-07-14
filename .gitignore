@@ -1,0 +1,70 @@
+# Generated inventory and comparison exports
+exports/
+output/
+downloads/
+*.csv
+*.xls
+*.xlsx
+*.xlsm
+
+# Uploaded comparison inputs and local test/customer data
+uploads/
+uploaded-assets/
+comparison-inputs/
+local-test-data/
+test-data/
+mock-data/
+fixtures/local/
+*.txt
+!SHEETJS-LICENSE.txt
+
+# Logs, traces, and temporary files
+logs/
+*.log
+*.trace
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+*.swp
+*.swo
+*~
+.cache/
+tmp/
+temp/
+ConsoleHost_history.txt
+
+# Environment, credential, certificate, and secret material
+.env
+.env.*
+!.env.example
+*.secret
+*.secrets
+secrets/
+credentials/
+*.key
+*.pem
+*.pfx
+*.p12
+*.cer
+*.crt
+config.local.*
+*.local.config
+
+# Editor and IDE state
+.vscode/
+.idea/
+.vs/
+*.code-workspace
+*.user
+*.suo
+
+# Operating-system metadata
+.DS_Store
+.AppleDouble
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
