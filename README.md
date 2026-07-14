@@ -1,8 +1,74 @@
 # LogRhythm Log Source Explorer (Unofficial Utility)
 
-> This is an unofficial, independent community utility. It is not an official LogRhythm or Exabeam product and is not endorsed, owned, partnered with, or supported by LogRhythm or Exabeam.
+> This is an unofficial, independent community utility. It is not an official
+> LogRhythm or Exabeam product and is not endorsed, owned, partnered with, or
+> supported by LogRhythm or Exabeam.
 
-A portable browser interface for discovering and inspecting LogRhythm Platform Manager log sources. The application uses vanilla HTML, CSS, JavaScript, and a local Windows PowerShell proxy. It requires no installation, Administrator privileges, npm, compilation, Python, or external modules.
+LogRhythm Log Source Explorer is a portable community-built utility designed
+to simplify Log Source inventory, validation, and coverage assessment in
+LogRhythm SIEM environments.
+
+The application connects to the LogRhythm Platform Manager Admin API, retrieves
+the configured Log Sources and their available details, and presents them in a
+searchable, filterable, sortable, and exportable inventory.
+
+It uses vanilla HTML, CSS, JavaScript, and a restricted local Windows PowerShell
+proxy. It requires no installation, Administrator privileges, npm, compilation,
+Python, database, or external backend service.
+
+## Who is this tool for?
+
+This utility is primarily intended for:
+
+- SIEM administrators
+- SOC engineers and analysts
+- Cybersecurity integration teams
+- Log management teams
+- Security teams performing SIEM health checks
+- Teams conducting asset coverage and integration gap assessments
+
+## Why this tool exists
+
+Reviewing large numbers of Log Sources manually through Deployment Manager can
+be time-consuming, especially when validating statuses, Log Source Types,
+collection methods, identifiers, hosts, and integration coverage.
+
+This utility helps security teams:
+
+- Build a clear operational Log Source inventory
+- Separate operational sources from internal LogRhythm system sources
+- Review Active, Retired, and Unknown records
+- Inspect IP addresses, FQDNs, and other Log Source identifiers
+- Review the Collection Method derived from the Log Source Type
+- Search, filter, sort, paginate, and export inventory data
+- Identify failed detail requests without losing successful results
+- Reduce the manual effort required during SIEM validation and health checks
+
+## Comparative Mode
+
+Comparative Mode provides a simple asset-to-SIEM coverage comparison.
+
+The user uploads a TXT, CSV, or XLSX file containing one IP address or FQDN per
+row. The application compares each valid submitted row against the loaded
+LogRhythm inventory using the Log Source Host field and all identifiers
+returned by the API.
+
+The results help identify:
+
+- Assets already integrated into LogRhythm
+- Assets with no matching Log Source
+- The matching Log Source Name
+- The matching Log Source Type
+- Invalid submitted rows
+- Assets that may require new SIEM integration or further investigation
+
+If one submitted asset matches multiple Log Sources, the application displays
+one result row for each matching Log Source. Submitted rows that do not match
+any Log Source are clearly shown as unmatched.
+
+The objective is to make basic SIEM gap analysis faster by showing the
+difference between the assets expected to be monitored and the assets currently
+integrated into LogRhythm.
 
 ## Start the application
 
