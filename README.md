@@ -26,7 +26,7 @@ If port `8090` is occupied, blocked, or reserved by Windows, the server automati
 HTTPS and Platform Manager port `8501` are fixed. Valid inputs include:
 
 - An FQDN such as `pm.example.com`
-- An IPv4 address such as `10.20.30.40`
+- A documentation-only IPv4 example such as `192.0.2.10`
 - `localhost`
 - `127.0.0.1`
 
