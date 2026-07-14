@@ -87,7 +87,7 @@ Comparative Mode accepts:
 
 Uploads remain in browser memory. Matching is exact after normalization and checks the Log Source Host plus every identifier returned by the detail API, including identifiers beyond the eight displayed inventory columns. Excluded/Internal Log Sources participate only when the user enables the comparison option. Visible comparison rows can be exported to CSV or a real XLSX workbook.
 
-Comparison processes each unique valid normalized asset once. Every valid submitted occurrence, original spelling, and original row number is still retained in memory. When duplicates exist, the application shows their first-occurrence row and occurrence count and enables separate duplicate-inclusive CSV and Excel exports. Those exports preserve original file-row order and repeat matching Log Source rows for each submitted occurrence; invalid rows remain only in their validation summary.
+Comparison processes every valid submitted row independently in original file order, including repeated IP addresses or FQDNs. Results preserve the submitted spelling, and a row that matches multiple Log Sources produces one result for each matching record. Invalid rows remain separate in the validation summary and do not participate in comparison.
 
 ## Bundled third-party software
 

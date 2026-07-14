@@ -177,6 +177,7 @@
           <table>
             <thead>
               <tr>
+                <th class="sticky-col action-col">Actions</th>
                 <th class="sticky-col id-col"><button type="button" class="sort-button" data-sort="id">ID <span>↕</span></button></th>
                 <th class="sticky-col name-col"><button type="button" class="sort-button" data-sort="name">Name <span>↕</span></button></th>
                 <th class="sticky-col status-col"><button type="button" class="sort-button" data-sort="status">Record Status <span>↕</span></button></th>
@@ -194,7 +195,6 @@
                 <th><button type="button" class="sort-button" data-sort="identifier6">Identifier 6 <span>↕</span></button></th>
                 <th><button type="button" class="sort-button" data-sort="identifier7">Identifier 7 <span>↕</span></button></th>
                 <th><button type="button" class="sort-button" data-sort="identifier8">Identifier 8 <span>↕</span></button></th>
-                <th><span class="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody id="logSourceBody"></tbody>
@@ -241,7 +241,7 @@
           <div id="excludedTableRegion" class="table-region" hidden>
             <table>
               <thead><tr>
-                <th class="sticky-col id-col">ID</th><th class="sticky-col name-col">Name</th><th class="sticky-col status-col">Record Status</th><th>Log Source Type</th><th>Exclusion Reason</th><th>Collection Method</th><th>Host</th><th>Last Log Date</th><th>Identifier 1</th><th>Identifier 2</th><th><span class="sr-only">Actions</span></th>
+                <th class="sticky-col action-col">Actions</th><th class="sticky-col id-col">ID</th><th class="sticky-col name-col">Name</th><th class="sticky-col status-col">Record Status</th><th>Log Source Type</th><th>Exclusion Reason</th><th>Collection Method</th><th>Host</th><th>Last Log Date</th><th>Identifier 1</th><th>Identifier 2</th><th>Identifier 3</th><th>Identifier 4</th><th>Identifier 5</th><th>Identifier 6</th><th>Identifier 7</th><th>Identifier 8</th>
               </tr></thead>
               <tbody id="excludedLogSourceBody"></tbody>
             </table>
@@ -286,14 +286,7 @@
               <span>Total submitted rows <strong id="submittedRowCount">0</strong></span>
               <span>Valid rows <strong id="validRowCount">0</strong></span>
               <span>Invalid rows <strong id="invalidRowCount">0</strong></span>
-              <span>Duplicate submitted rows <strong id="duplicateRowCount">0</strong></span>
             </div>
-            <p id="noDuplicatesMessage" class="positive-message" hidden>No duplicate submitted assets were detected.</p>
-            <details id="duplicateRowsPanel" class="validation-panel duplicate-panel" hidden>
-              <summary>Duplicate Submitted Assets</summary>
-              <p class="duplicate-warning">Duplicate rows may inflate comparison results when included in duplicate-aware exports.</p>
-              <div class="table-region"><table><thead><tr><th>Original Submitted Value</th><th>Normalized Value</th><th>Original Row Number</th><th>First Occurrence Row Number</th><th>Number of Occurrences</th></tr></thead><tbody id="duplicateRowsBody"></tbody></table></div>
-            </details>
             <div id="invalidRowsPanel" class="validation-panel" hidden>
               <h4>Invalid rows</h4>
               <div class="table-region"><table><thead><tr><th>Row</th><th>Submitted Value</th><th>Reason</th></tr></thead><tbody id="invalidRowsBody"></tbody></table></div>
@@ -309,18 +302,15 @@
                 <button id="clearComparisonButton" class="button button-secondary" type="button" disabled>Clear Results</button>
                 <button id="comparisonCsvButton" class="button button-secondary" type="button" disabled>Export Visible CSV (0)</button>
                 <button id="comparisonXlsxButton" class="button button-secondary" type="button" disabled>Export Visible Excel (0)</button>
-                <button id="comparisonDuplicatesCsvButton" class="button button-secondary" type="button" hidden disabled>Export Visible with Duplicates CSV (0)</button>
-                <button id="comparisonDuplicatesXlsxButton" class="button button-secondary" type="button" hidden disabled>Export Visible with Duplicates Excel (0)</button>
               </div>
             </div>
             <div id="comparisonSummary" class="metric-grid" hidden>
               <span>Total Submitted Rows <strong id="comparisonSubmittedCount">0</strong></span>
-              <span>Unique Valid Assets <strong id="comparisonUniqueValidCount">0</strong></span>
-              <span>Duplicate Submitted Rows <strong id="comparisonDuplicateCount">0</strong></span>
-              <span>Matched assets <strong id="comparisonMatchedCount">0</strong></span>
-              <span>Unmatched assets <strong id="comparisonUnmatchedCount">0</strong></span>
-              <span>Invalid rows <strong id="comparisonInvalidCount">0</strong></span>
-              <span>Total matching Log Source records <strong id="comparisonMatchRecordCount">0</strong></span>
+              <span>Valid Submitted Rows <strong id="comparisonValidCount">0</strong></span>
+              <span>Invalid Rows <strong id="comparisonInvalidCount">0</strong></span>
+              <span>Matched Submitted Rows <strong id="comparisonMatchedCount">0</strong></span>
+              <span>Unmatched Submitted Rows <strong id="comparisonUnmatchedCount">0</strong></span>
+              <span>Total Matching Log Source Records <strong id="comparisonMatchRecordCount">0</strong></span>
             </div>
             <div id="comparisonEmptyState" class="empty-state compact-empty"><h3>No comparison results</h3><p>Upload a valid TXT, CSV, or XLSX file to compare assets.</p></div>
             <div id="comparisonTableRegion" class="table-region" hidden>

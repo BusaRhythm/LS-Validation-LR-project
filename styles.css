@@ -157,9 +157,11 @@ tbody tr:hover { background: rgba(34,211,167,.045); }
 tbody tr.row-error { background: rgba(255,107,118,.025); }
 .sticky-col { position: sticky; z-index: 2; background: #0d1924; }
 th.sticky-col { z-index: 4; background: #0a1620; }
-.id-col { left: 0; min-width: 90px; width: 90px; max-width: 90px; }
-.name-col { left: 90px; min-width: 220px; width: 220px; max-width: 220px; }
-.status-col { left: 310px; min-width: 120px; width: 120px; max-width: 120px; box-shadow: 8px 0 12px rgba(0,0,0,.14); }
+.action-col { left: 0; z-index: 3; min-width: 112px; width: 112px; max-width: 112px; border-right: 1px solid var(--border-bright); box-shadow: 7px 0 12px rgba(0,0,0,.18); }
+th.action-col { z-index: 6; }
+.id-col { left: 112px; min-width: 90px; width: 90px; max-width: 90px; }
+.name-col { left: 202px; min-width: 220px; width: 220px; max-width: 220px; }
+.status-col { left: 422px; min-width: 120px; width: 120px; max-width: 120px; box-shadow: 8px 0 12px rgba(0,0,0,.14); }
 tbody tr:hover .sticky-col { background: #10232d; }
 tbody tr.row-error .sticky-col { background: #1a2029; }
 .identifier-cell { min-width: 165px; max-width: 220px; color: #bce5dd; }
@@ -206,10 +208,6 @@ tbody tr.row-error .sticky-col { background: #1a2029; }
 .metric-grid strong { display: block; margin-top: 4px; color: var(--text); font-size: 1rem; }
 .validation-panel { margin-top: 16px; }
 .validation-panel h4 { margin: 0 0 8px; color: #ffc5c9; font-size: .8rem; }
-.duplicate-panel { padding: 12px; border: 1px solid rgba(244,189,94,.3); border-radius: 8px; background: rgba(244,189,94,.045); }
-.duplicate-panel summary { color: #ffd995; font-size: .8rem; font-weight: 750; cursor: pointer; }
-.duplicate-warning { margin: 10px 0; color: #f2cc87; font-size: .75rem; line-height: 1.5; }
-.positive-message { margin: 14px 0 0; color: #a9f4df; font-size: .75rem; }
 .compact-select { min-height: 37px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: #09141d; }
 .comparison-sort { padding: 0; border: 0; color: inherit; background: none; font: inherit; letter-spacing: inherit; text-transform: inherit; }
 .comparison-sort span { color: var(--muted); }

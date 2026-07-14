@@ -126,10 +126,6 @@
     submittedRowCount: document.getElementById("submittedRowCount"),
     validRowCount: document.getElementById("validRowCount"),
     invalidRowCount: document.getElementById("invalidRowCount"),
-    duplicateRowCount: document.getElementById("duplicateRowCount"),
-    noDuplicatesMessage: document.getElementById("noDuplicatesMessage"),
-    duplicateRowsPanel: document.getElementById("duplicateRowsPanel"),
-    duplicateRowsBody: document.getElementById("duplicateRowsBody"),
     invalidRowsPanel: document.getElementById("invalidRowsPanel"),
     invalidRowsBody: document.getElementById("invalidRowsBody"),
     comparisonSearch: document.getElementById("comparisonSearch"),
@@ -137,12 +133,9 @@
     clearComparison: document.getElementById("clearComparisonButton"),
     comparisonCsv: document.getElementById("comparisonCsvButton"),
     comparisonXlsx: document.getElementById("comparisonXlsxButton"),
-    comparisonDuplicatesCsv: document.getElementById("comparisonDuplicatesCsvButton"),
-    comparisonDuplicatesXlsx: document.getElementById("comparisonDuplicatesXlsxButton"),
     comparisonSummary: document.getElementById("comparisonSummary"),
     comparisonSubmittedCount: document.getElementById("comparisonSubmittedCount"),
-    comparisonUniqueValidCount: document.getElementById("comparisonUniqueValidCount"),
-    comparisonDuplicateCount: document.getElementById("comparisonDuplicateCount"),
+    comparisonValidCount: document.getElementById("comparisonValidCount"),
     comparisonMatchedCount: document.getElementById("comparisonMatchedCount"),
     comparisonUnmatchedCount: document.getElementById("comparisonUnmatchedCount"),
     comparisonInvalidCount: document.getElementById("comparisonInvalidCount"),
@@ -181,7 +174,7 @@
     comparisonVisible: [],
     comparisonSearch: "",
     comparisonMatchFilter: "all",
-    comparisonSortKey: "submitted",
+    comparisonSortKey: "inputOrder",
     comparisonSortDirection: "asc"
   };
 
@@ -374,13 +367,13 @@
     visit(detail, false, 0);
     visit(listRecord, false, 0);
 
-    const deduplicated = [];
+    const uniqueIdentifiers = [];
     const seenPairs = new Set();
     collected.forEach((identifier) => {
       const key = `${normalizedKey(identifier.type)}\u0000${identifier.value.toLowerCase()}`;
       if (!seenPairs.has(key)) {
         seenPairs.add(key);
-        deduplicated.push(identifier);
+        uniqueIdentifiers.push(identifier);
       }
     });
 
@@ -391,7 +384,7 @@
       return 2;
     }
 
-    return deduplicated
+    return uniqueIdentifiers
       .sort((left, right) => priority(left) - priority(right) || left.order - right.order)
       .map(({ type, value }) => ({ type, value }));
   }
@@ -992,9 +985,8 @@
   }
 
   function validateComparisonRows(rows, firstDataIndex) {
-    const validOccurrences = [];
+    const valid = [];
     const invalid = [];
-    const groups = new Map();
     let total = 0;
     for (let index = firstDataIndex; index < rows.length; index += 1) {
       const row = Array.isArray(rows[index]) ? rows[index] : [rows[index]];
@@ -1006,21 +998,10 @@
         continue;
       }
       const result = validateSubmittedAsset(nonEmpty[0]);
-      result.row = index + 1;
-      if (!result.valid) invalid.push({ row: result.row, original: result.original, reason: result.reason });
-      else {
-        validOccurrences.push(result);
-        if (!groups.has(result.normalized)) groups.set(result.normalized, []);
-        groups.get(result.normalized).push(result);
-      }
+      if (!result.valid) invalid.push({ row: index + 1, original: result.original, reason: result.reason });
+      else valid.push(result);
     }
-    const occurrences = validOccurrences.map((asset) => {
-      const group = groups.get(asset.normalized);
-      return { ...asset, firstRow: group[0].row, occurrenceCount: group.length, isDuplicate: asset !== group[0] };
-    });
-    const valid = Array.from(groups.values(), (group) => ({ ...group[0], occurrenceCount: group.length }));
-    const duplicateRows = occurrences.filter((asset) => asset.isDuplicate);
-    return { total, valid, invalid, occurrences, duplicateRows, duplicates: duplicateRows.length, validRows: occurrences.length };
+    return { total, valid, invalid, validRows: valid.length };
   }
 
   async function parseComparisonFile(file) {
@@ -1065,29 +1046,28 @@
     }));
 
     const rows = [];
-    let matchedAssets = 0;
-    let unmatchedAssets = 0;
+    let matchedRows = 0;
+    let unmatchedRows = 0;
+    let inputOrder = 0;
     input.valid.forEach((asset) => {
       const matches = lookup.get(asset.normalized) || [];
-      const aliases = (input.occurrences || input.valid).filter((occurrence) => occurrence.normalized === asset.normalized).map((occurrence) => occurrence.original);
       if (matches.length) {
-        matchedAssets += 1;
+        matchedRows += 1;
         matches.forEach((source) => {
           const summary = summaryFor(source);
-          rows.push({ submitted: asset.original, normalized: asset.normalized, aliases, type: summary.type, name: summary.name, matched: true });
+          rows.push({ submitted: asset.original, type: summary.type, name: summary.name, matched: true, inputOrder: inputOrder++ });
         });
       } else {
-        unmatchedAssets += 1;
-        rows.push({ submitted: asset.original, normalized: asset.normalized, aliases, type: "", name: "", matched: false });
+        unmatchedRows += 1;
+        rows.push({ submitted: asset.original, type: "", name: "", matched: false, inputOrder: inputOrder++ });
       }
     });
     return {
       rows,
       submittedRows: input.total,
-      uniqueValidAssets: input.valid.length,
-      duplicateRows: input.duplicates,
-      matchedAssets,
-      unmatchedAssets,
+      validRows: input.valid.length,
+      matchedRows,
+      unmatchedRows,
       invalidRows: input.invalid.length,
       matchingRecords: rows.filter((row) => row.matched).length
     };
@@ -1101,22 +1081,28 @@
     state.comparisonRows = result.rows;
     elements.comparisonSummary.hidden = false;
     elements.comparisonSubmittedCount.textContent = result.submittedRows.toLocaleString();
-    elements.comparisonUniqueValidCount.textContent = result.uniqueValidAssets.toLocaleString();
-    elements.comparisonDuplicateCount.textContent = result.duplicateRows.toLocaleString();
-    elements.comparisonMatchedCount.textContent = result.matchedAssets.toLocaleString();
-    elements.comparisonUnmatchedCount.textContent = result.unmatchedAssets.toLocaleString();
+    elements.comparisonValidCount.textContent = result.validRows.toLocaleString();
+    elements.comparisonMatchedCount.textContent = result.matchedRows.toLocaleString();
+    elements.comparisonUnmatchedCount.textContent = result.unmatchedRows.toLocaleString();
     elements.comparisonInvalidCount.textContent = result.invalidRows.toLocaleString();
     elements.comparisonMatchRecordCount.textContent = result.matchingRecords.toLocaleString();
     renderComparisonResults();
   }
 
+  function filterAndSortComparisonRows(rows, search, matchFilter, sortKey, sortDirection) {
+    const query = search.toLowerCase();
+    const direction = sortDirection === "asc" ? 1 : -1;
+    return rows.filter((row) =>
+      (matchFilter === "all" || (matchFilter === "matched") === row.matched) &&
+      (!query || [row.submitted, row.type, row.name].some((value) => value.toLowerCase().includes(query))))
+      .sort((left, right) => sortKey === "inputOrder"
+        ? (left.inputOrder - right.inputOrder) * direction
+        : left[sortKey].localeCompare(right[sortKey], undefined, { numeric: true, sensitivity: "base" }) * direction);
+  }
+
   function filteredComparisonRows() {
-    const query = state.comparisonSearch.toLowerCase();
-    const direction = state.comparisonSortDirection === "asc" ? 1 : -1;
-    return state.comparisonRows.filter((row) =>
-      (state.comparisonMatchFilter === "all" || (state.comparisonMatchFilter === "matched") === row.matched) &&
-      (!query || [row.submitted, row.type, row.name, ...row.aliases].some((value) => value.toLowerCase().includes(query))))
-      .sort((left, right) => left[state.comparisonSortKey].localeCompare(right[state.comparisonSortKey], undefined, { numeric: true, sensitivity: "base" }) * direction);
+    return filterAndSortComparisonRows(state.comparisonRows, state.comparisonSearch, state.comparisonMatchFilter,
+      state.comparisonSortKey, state.comparisonSortDirection);
   }
 
   function renderComparisonResults() {
@@ -1142,14 +1128,6 @@
     elements.comparisonXlsx.disabled = visible.length === 0;
     elements.comparisonCsv.textContent = `Export Visible CSV (${visible.length.toLocaleString()})`;
     elements.comparisonXlsx.textContent = `Export Visible Excel (${visible.length.toLocaleString()})`;
-    const hasDuplicates = Boolean(state.comparisonInput && state.comparisonInput.duplicates);
-    const duplicateRows = hasDuplicates ? duplicateInclusiveExportRows(visible, state.comparisonInput).slice(1) : [];
-    elements.comparisonDuplicatesCsv.hidden = !hasDuplicates;
-    elements.comparisonDuplicatesXlsx.hidden = !hasDuplicates;
-    elements.comparisonDuplicatesCsv.disabled = duplicateRows.length === 0;
-    elements.comparisonDuplicatesXlsx.disabled = duplicateRows.length === 0;
-    elements.comparisonDuplicatesCsv.textContent = `Export Visible with Duplicates CSV (${duplicateRows.length.toLocaleString()})`;
-    elements.comparisonDuplicatesXlsx.textContent = `Export Visible with Duplicates Excel (${duplicateRows.length.toLocaleString()})`;
   }
 
   function comparisonExportRows(rows) {
@@ -1171,65 +1149,11 @@
     globalThis.XLSX.writeFile(workbook, `LogRhythm_Comparison_Results_${filenameTimestamp(new Date())}.xlsx`, { compression: true });
   }
 
-  function duplicateInclusiveExportRows(visibleRows, input) {
-    const byNormalized = new Map();
-    visibleRows.forEach((row) => {
-      if (!byNormalized.has(row.normalized)) byNormalized.set(row.normalized, []);
-      byNormalized.get(row.normalized).push(row);
-    });
-    const rows = [["Submitted Asset", "Original Row Number", "Duplicate Status", "Log Source Type", "Log Source Name"]];
-    input.occurrences.forEach((occurrence) => {
-      const matches = byNormalized.get(occurrence.normalized) || [];
-      matches.forEach((match) => rows.push([
-        occurrence.original,
-        occurrence.row,
-        occurrence.isDuplicate ? "Duplicate" : "Original",
-        match.type,
-        match.name
-      ]));
-    });
-    return rows;
-  }
-
-  function exportComparisonWithDuplicatesCsv() {
-    if (!state.comparisonInput || !state.comparisonInput.duplicates) return;
-    const rows = duplicateInclusiveExportRows(state.comparisonVisible, state.comparisonInput);
-    if (rows.length === 1) return;
-    downloadBlob(buildCsv(rows), "text/csv;charset=utf-8", `LogRhythm_Comparison_With_Duplicates_${filenameTimestamp(new Date())}.csv`);
-  }
-
-  function exportComparisonWithDuplicatesXlsx() {
-    if (!state.comparisonInput || !state.comparisonInput.duplicates || !globalThis.XLSX) return;
-    const rows = duplicateInclusiveExportRows(state.comparisonVisible, state.comparisonInput);
-    if (rows.length === 1) return;
-    const sheet = globalThis.XLSX.utils.aoa_to_sheet(rows.map((row) => row.map(protectSpreadsheetValue)));
-    sheet["!cols"] = [{ wch: 35 }, { wch: 20 }, { wch: 18 }, { wch: 35 }, { wch: 45 }];
-    const workbook = globalThis.XLSX.utils.book_new();
-    globalThis.XLSX.utils.book_append_sheet(workbook, sheet, "Comparison With Duplicates");
-    globalThis.XLSX.writeFile(workbook, `LogRhythm_Comparison_With_Duplicates_${filenameTimestamp(new Date())}.xlsx`, { compression: true });
-  }
-
   function renderFileSummary(input) {
     elements.fileSummary.hidden = false;
     elements.submittedRowCount.textContent = input.total.toLocaleString();
     elements.validRowCount.textContent = input.validRows.toLocaleString();
     elements.invalidRowCount.textContent = input.invalid.length.toLocaleString();
-    elements.duplicateRowCount.textContent = input.duplicates.toLocaleString();
-    elements.noDuplicatesMessage.hidden = input.duplicates !== 0;
-    elements.duplicateRowsPanel.hidden = input.duplicates === 0;
-    elements.duplicateRowsPanel.open = false;
-    elements.duplicateRowsBody.replaceChildren();
-    const duplicateFragment = document.createDocumentFragment();
-    input.duplicateRows.forEach((duplicate) => {
-      const row = document.createElement("tr");
-      appendCell(row, duplicate.original);
-      appendCell(row, duplicate.normalized);
-      appendCell(row, String(duplicate.row));
-      appendCell(row, String(duplicate.firstRow));
-      appendCell(row, String(duplicate.occurrenceCount));
-      duplicateFragment.appendChild(row);
-    });
-    elements.duplicateRowsBody.appendChild(duplicateFragment);
     elements.invalidRowsPanel.hidden = input.invalid.length === 0;
     elements.invalidRowsBody.replaceChildren();
     const fragment = document.createDocumentFragment();
@@ -1249,12 +1173,16 @@
     elements.fileValidationMessage.hidden = true;
     elements.fileSummary.hidden = true;
     elements.invalidRowsPanel.hidden = true;
-    elements.duplicateRowsPanel.hidden = true;
-    elements.noDuplicatesMessage.hidden = true;
     elements.comparisonSummary.hidden = true;
     try {
       const input = await parseComparisonFile(file);
       state.comparisonInput = input;
+      state.comparisonSortKey = "inputOrder";
+      state.comparisonSortDirection = "asc";
+      document.querySelectorAll("[data-comparison-sort]").forEach((button) => {
+        button.removeAttribute("data-direction");
+        button.querySelector("span").textContent = "↕";
+      });
       renderFileSummary(input);
       runComparison();
     } catch (error) {
@@ -1262,8 +1190,6 @@
       state.comparisonRows = [];
       elements.invalidRowsBody.replaceChildren();
       elements.invalidRowsPanel.hidden = true;
-      elements.duplicateRowsPanel.hidden = true;
-      elements.noDuplicatesMessage.hidden = true;
       elements.fileValidationMessage.textContent = normalizeError(error).message;
       elements.fileValidationMessage.hidden = false;
       renderComparisonResults();
@@ -1276,13 +1202,13 @@
     state.comparisonVisible = [];
     state.comparisonSearch = "";
     state.comparisonMatchFilter = "all";
+    state.comparisonSortKey = "inputOrder";
+    state.comparisonSortDirection = "asc";
     elements.comparisonFile.value = "";
     elements.comparisonSearch.value = "";
     elements.comparisonMatchFilter.value = "all";
     elements.fileSummary.hidden = true;
     elements.invalidRowsPanel.hidden = true;
-    elements.duplicateRowsPanel.hidden = true;
-    elements.noDuplicatesMessage.hidden = true;
     elements.comparisonSummary.hidden = true;
     elements.fileValidationMessage.hidden = true;
     renderComparisonResults();
@@ -1401,6 +1327,7 @@
     const summary = summaryFor(source);
     const row = document.createElement("tr");
     if (source.error) row.classList.add("row-error");
+    row.appendChild(createActionCell(source));
     appendCell(row, summary.id, "sticky-col id-col");
     appendCell(row, summary.name, "name-cell sticky-col name-col");
     appendCell(row, summary.status, "sticky-col status-col");
@@ -1409,16 +1336,9 @@
     appendCell(row, summary.collectionMethod, "", `${summary.collectionConfidence}: ${summary.collectionEvidence}`);
     appendCell(row, summary.host);
     appendCell(row, summary.lastLogDate, "", lastLogTooltip(summary.lastLogDateInfo));
-    appendIdentifierCell(row, summary.identifiers[0]);
-    appendIdentifierCell(row, summary.identifiers[1]);
-    const actionCell = document.createElement("td");
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "details-button";
-    button.textContent = source.error ? "View Error" : "View Details";
-    button.addEventListener("click", () => openDetails(source));
-    actionCell.appendChild(button);
-    row.appendChild(actionCell);
+    for (let index = 0; index < MAX_IDENTIFIERS; index += 1) {
+      appendIdentifierCell(row, summary.identifiers[index]);
+    }
     return row;
   }
 
@@ -1436,6 +1356,7 @@
       }
     });
 
+    row.appendChild(createActionCell(source));
     appendCell(row, summary.id, "sticky-col id-col");
     appendCell(row, summary.name, "name-cell sticky-col name-col");
     const statusCell = document.createElement("td");
@@ -1455,7 +1376,12 @@
       appendIdentifierCell(row, summary.identifiers[index]);
     }
 
+    return row;
+  }
+
+  function createActionCell(source) {
     const actionCell = document.createElement("td");
+    actionCell.className = "sticky-col action-col";
     const button = document.createElement("button");
     button.type = "button";
     button.className = "details-button";
@@ -1466,8 +1392,7 @@
       openDetails(source);
     });
     actionCell.appendChild(button);
-    row.appendChild(actionCell);
-    return row;
+    return actionCell;
   }
 
   function appendCell(row, value, className, title) {
@@ -1788,8 +1713,6 @@
     elements.clearComparison.addEventListener("click", clearComparisonResults);
     elements.comparisonCsv.addEventListener("click", exportComparisonCsv);
     elements.comparisonXlsx.addEventListener("click", exportComparisonXlsx);
-    elements.comparisonDuplicatesCsv.addEventListener("click", exportComparisonWithDuplicatesCsv);
-    elements.comparisonDuplicatesXlsx.addEventListener("click", exportComparisonWithDuplicatesXlsx);
     document.querySelector(".comparison-table thead").addEventListener("click", changeComparisonSort);
     document.querySelector(".filter-group").addEventListener("click", changeFilter);
     document.querySelector("thead").addEventListener("click", changeSort);
@@ -1841,8 +1764,8 @@
       validateComparisonRows,
       parseComparisonFile,
       compareSubmittedAssets,
+      filterAndSortComparisonRows,
       comparisonExportRows,
-      duplicateInclusiveExportRows,
       createEmptyAdvancedFilters,
       renderObject,
       setBearerTokenForTest(token) { bearerToken = token; },
