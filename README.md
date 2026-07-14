@@ -25,12 +25,12 @@ If port `8090` is occupied, blocked, or reserved by Windows, the server automati
 
 HTTPS and Platform Manager port `8501` are fixed. Valid inputs include:
 
-- An FQDN such as `pm.example.com`
-- A documentation-only IPv4 example such as `192.0.2.10`
+- An FQDN such as `pm.example.com` of the Platform Manager
+- A documentation-only IPv4 example such as `10.X.X.X`
 - `localhost`
 - `127.0.0.1`
 
-`localhost` and `127.0.0.1` are useful when this tool is running directly on the Platform Manager.
+`localhost` and `127.0.0.1` are useful when this tool is running directly on the Platform Manager host.
 
 The PowerShell proxy accepts an untrusted or self-signed Platform Manager certificate only for the restricted outbound HTTPS connection created by this script to the fixed LogRhythm API host, port, and allowlisted paths. It does not install a certificate, affect the browser-facing loopback server, or change certificate validation globally for PowerShell, Windows, the browser, or other applications.
 
